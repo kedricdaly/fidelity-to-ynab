@@ -45,7 +45,8 @@ class Transaction_fid:
 
     def generate_ynab4_memo(self):
         try:
-            return ':'.join([self.date, self.source, self.transaction_type])
+            dtime = datetime.strptime(self.date,'%m/%d/%Y')
+            return ':'.join([dtime.strftime('%Y%m%d'), self.source, self.transaction_type])
         except:
             return f'Could not create memo for transaction: {self}'
 
