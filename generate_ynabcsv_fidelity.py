@@ -71,7 +71,7 @@ def remove_showdetails(raw):
 def separate_cols(records):
     '''
     Each record is a tab-delimited list. Explicitly create a list by separating on tabs
-    Order of data: [date, key, type, cost, count of shares]
+    Order of data: [date, source, transaction type, cost, count of shares]
     '''
 
     # non-list comprehension
@@ -96,7 +96,6 @@ def generate_ynabcsv_fidelity(raw):
     records = no_details.split('\n')
     records = separate_cols(records)
     transactions = create_transactions(records)
-    print(*transactions, sep='\n')
     with open('ynab_import.csv', 'w', newline='') as f:
         writer = csv.writer(f)
         writer.writerow(generate_ynab_header())
