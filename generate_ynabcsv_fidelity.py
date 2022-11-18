@@ -1,5 +1,6 @@
 import csv
 import re
+from datetime import datetime
 from tkinter import Tk
 
 class Transaction_fid:
@@ -110,13 +111,13 @@ def generate_ynabcsv_fidelity(raw):
     records = separate_cols(records)
     tx_fid = create_transactions_fid(records)
     tx_ynab4 = [fid_to_ynab4(tx) for tx in tx_fid]
-    with open('ynab_import.csv', 'w', newline='') as f:
+    dstring = datetime.now().strftime('%Y%m%d') #YYYYMMDD
+    with open(f'ynab-import_{dstring}.csv', 'w', newline='') as f:
         writer = csv.writer(f)
         writer.writerow(generate_ynab4_header())
         writer.writerows(tx_ynab4)
 
 if __name__ == '__main__':
     # read from clipboard
-    raw = Tk().clipboard_get()
-    generate_ynabcsv_fidelity(raw)
+    generate_ynabcsv_fidelity(Tk().clipboard_get())
     
