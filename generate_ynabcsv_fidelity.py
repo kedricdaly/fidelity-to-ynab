@@ -76,29 +76,17 @@ def remove_showdetails(raw):
     pattern = re.compile('\n\n.*\n\t', re.M)
     details = re.findall(pattern, raw)
     for item in details:
-        raw = raw.replace(item,'\t')
-    
+        raw = raw.replace(item,'\t')  
     return raw
 
-def separate_cols(records):
-    '''
-    Each record is a tab-delimited list. Explicitly create a list by separating on tabs
-    Order of data: [date, source, transaction type, cost, count of shares]
-    '''
-
-    # non-list comprehension
-    records2 = records.copy()
-    for i in range(0, len(records2)):
-        records2[i] = records2[i].split('\t')
-        for j in range(0, len(records2[i])):
-            records2[i][j] = records2[i][j].strip()
-
-    #records = [record.split('\t') for record in records]
-    # TODO: convert to list comprehension
-    #return [x.strip() for record in records for x in record.split('\t')]
-    return records2
+def clean_raw_data(raw):
+    no_details = remove_showdetails(raw)
+    records = no_details.split('\n')
+    splits = [record.split('\t') for record in records]
+    return [[col.strip() for col in record] for record in splits]
 
 def create_transactions_fid(records):
+    # removes share info from Transaction_fids
     return [Transaction_fid(*record[:-1]) for record in records]
 
 def fid_to_ynab4(tx):
@@ -107,11 +95,14 @@ def fid_to_ynab4(tx):
     return Transaction_YNAB4(tx.date, payee, None, memo, None, tx.amount)
 
 def generate_ynabcsv_fidelity(raw):
-    no_details = remove_showdetails(raw)
-    records = no_details.split('\n')
-    records = separate_cols(records)
+    # clean input data
+    records = clean_raw_data(raw)
+
+    # transform
     tx_fid = create_transactions_fid(records)
     tx_ynab4 = [fid_to_ynab4(tx) for tx in tx_fid]
+
+    # output
     dstring = datetime.now().strftime('%Y%m%d') #YYYYMMDD
     with open(f'ynab-import_{dstring}.csv', 'w', newline='') as f:
         writer = csv.writer(f)
