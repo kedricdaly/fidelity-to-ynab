@@ -2,24 +2,15 @@ import csv
 import re
 from tkinter import Tk
 
-class Transaction:
+class Transaction_fid:
     def __init__(self, date, source, transaction_type, amount):
         self.date = date # MM/DD/YYYY, as string
         self.source = source.title()
         self.transaction_type = transaction_type.title()
-        self.outflow = '' # will always use inflow for YNAB
-        self.inflow = float(amount.replace('$','')) # remove '$' to allow for float datatype
-        self.payee = self.normalize_payee(self.get_payees())
+        self.amount = float(amount.replace('$','')) # remove '$' to allow for float datatype
 
     def __str__(self):
-        return f'{self.date}: {self.source}, {self.transaction_type}. {self.inflow}, {self.payee}'
-    
-    def __iter__(self):
-        '''
-        Used for writing to csv, and is therefore YNAB output
-        YNAB CSV order: Date, Payee, Category, Memo, Outflow, Inflow
-        '''
-        return iter([self.date, self.payee, '', self.get_memo(), self.outflow, self.inflow])
+        return f'{self.date}, {self.source}, {self.transaction_type}. {self.amount}'
 
     def get_payees(self):
         '''
@@ -57,7 +48,26 @@ class Transaction:
         except:
             return f'Could not create memo for transaction: {self}'
 
-def generate_ynab_header():
+class Transaction_YNAB4:
+        def __init__(self, date, payee, category="", memo="", outflow=None, inflow=None):
+            self.date = date # MM/DD/YYYY, as string
+            self.payee = payee
+            self.category = category
+            self.memo = memo
+            self.outflow = outflow
+            self.inflow = inflow
+
+        def __str__(self):
+            return f'{self.date}, {self.payee}, {self.category}. {self.memo}, {self.outflow}, {self.inflow}'
+
+        def __iter__(self):
+            '''
+            Used for writing to csv, and is therefore YNAB output
+            YNAB CSV order: Date, Payee, Category, Memo, Outflow, Inflow
+            '''
+            return iter([self.date, self.payee, self.category, self.memo, self.outflow, self.inflow])
+
+def generate_ynab4_header():
     return ['Date', 'Payee', 'Category', 'Memo', 'Outflow', 'Inflow']
 
 def remove_showdetails(raw):
@@ -87,18 +97,19 @@ def separate_cols(records):
     #return [x.strip() for record in records for x in record.split('\t')]
     return records2
 
-def create_transactions(records):
-    return [Transaction(*record[:-1]) for record in records]
+def create_transactions_fid(records):
+    return [Transaction_fid(*record[:-1]) for record in records]
 
 def generate_ynabcsv_fidelity(raw):
-    #print(repr(raw))
     no_details = remove_showdetails(raw)
     records = no_details.split('\n')
     records = separate_cols(records)
-    transactions = create_transactions(records)
+    transactions_fid = create_transactions_fid(records)
+    #TODO: convert transactions_fid to transactions_ynab4
+    return
     with open('ynab_import.csv', 'w', newline='') as f:
         writer = csv.writer(f)
-        writer.writerow(generate_ynab_header())
+        writer.writerow(generate_ynab4_header())
         writer.writerows(transactions)
 
 if __name__ == '__main__':
