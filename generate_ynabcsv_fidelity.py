@@ -42,14 +42,14 @@ class Transaction_fid:
         except:
             return 'Source or transaction type not in payees dictionary'
 
-    def get_memo(self):
+    def generate_ynab4_memo(self):
         try:
             return ':'.join([self.date, self.source, self.transaction_type])
         except:
             return f'Could not create memo for transaction: {self}'
 
 class Transaction_YNAB4:
-        def __init__(self, date, payee, category="", memo="", outflow=None, inflow=None):
+        def __init__(self, date, payee, category=None, memo=None, outflow=None, inflow=None):
             self.date = date # MM/DD/YYYY, as string
             self.payee = payee
             self.category = category
@@ -91,7 +91,6 @@ def separate_cols(records):
         for j in range(0, len(records2[i])):
             records2[i][j] = records2[i][j].strip()
 
-
     #records = [record.split('\t') for record in records]
     # TODO: convert to list comprehension
     #return [x.strip() for record in records for x in record.split('\t')]
@@ -100,17 +99,21 @@ def separate_cols(records):
 def create_transactions_fid(records):
     return [Transaction_fid(*record[:-1]) for record in records]
 
+def fid_to_ynab4(tx):
+    payee = tx.normalize_payee(tx.get_payees())
+    memo = tx.generate_ynab4_memo()
+    return Transaction_YNAB4(tx.date, payee, None, memo, None, tx.amount)
+
 def generate_ynabcsv_fidelity(raw):
     no_details = remove_showdetails(raw)
     records = no_details.split('\n')
     records = separate_cols(records)
-    transactions_fid = create_transactions_fid(records)
-    #TODO: convert transactions_fid to transactions_ynab4
-    return
+    tx_fid = create_transactions_fid(records)
+    tx_ynab4 = [fid_to_ynab4(tx) for tx in tx_fid]
     with open('ynab_import.csv', 'w', newline='') as f:
         writer = csv.writer(f)
         writer.writerow(generate_ynab4_header())
-        writer.writerows(transactions)
+        writer.writerows(tx_ynab4)
 
 if __name__ == '__main__':
     # read from clipboard
