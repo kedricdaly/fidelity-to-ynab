@@ -96,7 +96,6 @@ def generate_ynabcsv_fidelity(raw):
     records = no_details.split('\n')
     records = separate_cols(records)
     transactions = create_transactions(records)
-    print(*transactions, sep='\n')
     with open('ynab_import.csv', 'w', newline='') as f:
         writer = csv.writer(f)
         writer.writerow(generate_ynab_header())
