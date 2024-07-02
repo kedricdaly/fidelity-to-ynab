@@ -8,7 +8,7 @@ class Transaction_fid:
         self.date = date # MM/DD/YYYY, as string
         self.source = source.title()
         self.transaction_type = transaction_type.title()
-        self.amount = float(amount.replace('$','')) # remove '$' to allow for float datatype
+        self.amount = float(amount.replace('$','').replace(',','')) # remove '$' to allow for float datatype
 
     def __str__(self):
         return f'{self.date}, {self.source}, {self.transaction_type}. {self.amount}'
